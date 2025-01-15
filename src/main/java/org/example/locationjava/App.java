@@ -10,6 +10,10 @@ import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.geometry.HPos;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class App extends Application {
     private Agence agence;
@@ -50,8 +54,7 @@ public class App extends Application {
         GridPane.setHalignment(loginBtn, HPos.RIGHT);
 
         loginBtn.setOnAction(e -> {
-            // Simple login validation (can be replaced with real authentication logic)
-            if ("admin".equals(userField.getText()) && "password".equals(passField.getText())) {
+            if (authenticate(userField.getText(), passField.getText())) {
                 showMainApp(primaryStage);
             } else {
                 showAlert("Erreur", "Nom d'utilisateur ou mot de passe incorrect");
@@ -62,6 +65,25 @@ public class App extends Application {
         primaryStage.setTitle("Formulaire d'authentification");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private boolean authenticate(String username, String password) {
+        String sql = "SELECT * FROM login WHERE username = ? AND password = ?";
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/authentication", "root", "Othmane123456789");
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            ResultSet rs = stmt.executeQuery();
+
+            return rs.next();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Erreur", "Problème de connexion à la base de données.");
+            return false;
+        }
     }
 
     private void showMainApp(Stage primaryStage) {
